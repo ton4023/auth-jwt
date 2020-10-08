@@ -1,8 +1,10 @@
 const router = require('express').Router()
 const User = require('../model/User')
+const Token = require('../model/Token')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { body, validationResult } = require('express-validator')
+const { json } = require('express')
 
 //Create
 router.post('/register', [
@@ -34,15 +36,24 @@ router.post('/register', [
             password: hashPassword,
         })
         try {
-            const saveUser = await user.save()
-            res.send({ user: users._id })
+
+            const userSave = await user.save()
+
+            //Create Token   
+            const token = jwt.sign({ _id: user._id }, process.env.TOKEN_API)
+            const keys = new Token({ key: token, user: user._id })
+
+            const tokenSave = await keys.save()
+
+            res.send(json({ user: users._id, token: tokenAPI }))
+
         } catch (err) {
             res.status(400).send(err)
         }
     })
 
 //Login
-router.post('/login', async (req, res)=>{
+router.post('/login', async (req, res) => {
     const user = await User.findOne({ email: req.body.email })
     if (!user) {
         return res.status(400).send('Email is not found')
@@ -52,10 +63,6 @@ router.post('/login', async (req, res)=>{
     if (!validPass) {
         return res.status(400).send('Invalid Password ')
     }
-
-    //Create token
-    const token = jwt.sign({ _id:user._id }, process.env.TOKEN_SECRET)
-    res.header('auth-token', token).send(token)
 })
 
 module.exports = router
