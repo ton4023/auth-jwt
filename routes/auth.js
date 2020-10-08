@@ -35,20 +35,18 @@ router.post('/register', [
             email: req.body.email,
             password: hashPassword,
         })
+
         try {
-
             const userSave = await user.save()
-
-            //Create Token   
-            const token = jwt.sign({ _id: user._id }, process.env.TOKEN_API)
-            const keys = new Token({ key: token, user: user._id })
-
-            const tokenSave = await keys.save()
-
-            res.send(json({ user: users._id, token: tokenAPI }))
-
-        } catch (err) {
-            res.status(400).send(err)
+            if (userSave) {
+                //Create Key for API  
+                const token = jwt.sign({ _id: user._id }, process.env.TOKEN_API)
+                const keys = new Token({ key: token, user: user._id })
+                const tokenSave = await keys.save()
+                res.send(json(tokenSave))
+            }
+        } catch (error) {
+            res.status(400).send(error)
         }
     })
 
@@ -63,6 +61,10 @@ router.post('/login', async (req, res) => {
     if (!validPass) {
         return res.status(400).send('Invalid Password ')
     }
+
+    //Create token
+    const token = jwt.sign({ _id:user._id }, process.env.TOKEN_SECRET)
+    res.header('auth-token', token).send(token)
 })
 
 module.exports = router
