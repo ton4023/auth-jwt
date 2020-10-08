@@ -21,4 +21,5 @@ app.use(express.json())
 app.use('/api/user', authRoute)
 app.use('/api/post', postRoute)
 
-app.listen(4000,()=>console.log("Server is running"))
+
+app.listen(3000,()=>console.log("Server is running"))
